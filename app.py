@@ -10,6 +10,10 @@ load_dotenv()
 
 app = Flask(__name__)
 
+@app.route("/", methods=["GET"])
+def index():
+    return "Lead Scoring API is running", 200
+
 # Endpoint to set the offer details
 @app.route("/offer", methods=["POST"])
 def set_offer():
