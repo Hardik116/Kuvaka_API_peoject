@@ -2,37 +2,49 @@ from services.gemini_helper import call_gemini, clean_gemini_response
 
 
 def rule_based_scoring(lead, offer):
+    """
+    Score a lead based on rule-based logic:
+    - Role relevance
+    - Industry match
+    - Data completeness
+    """
     score = 0
 
-    # Role relevance
+    # Role relevance scoring
     role = lead.get("role", "").lower()
     if any(keyword in role for keyword in ["head", "chief", "vp", "director"]):
         score += 20
     elif any(keyword in role for keyword in ["manager", "lead"]):
         score += 10
 
-    # Industry match
+    # Industry match scoring
     industry = lead.get("industry", "").lower()
     icp_list = [icp.lower() for icp in offer.get("ideal_use_cases", [])]
 
     if any(industry == icp for icp in icp_list):
         score += 20   # exact match
     elif any(industry in icp or icp in industry for icp in icp_list):
-        score += 10   # adjacent (partial overlap)
+        score += 10   # partial overlap
     else:
         score += 0
 
-    # Data completeness
+    # Data completeness bonus
     if all(lead.get(field) for field in ["name", "role", "company", "industry", "location", "linkedin_bio"]):
         score += 10
 
     return score
+
+
 def ai_based_scoring(lead: dict, offer: dict) -> dict:
-    # Load base prompt from file
+    """
+    Use Gemini AI to classify lead intent and reasoning.
+    Returns intent, reasoning, and mapped AI points.
+    """
+    # Load prompt template from file
     with open("services\prompt.txt", "r") as f:
         base_prompt = f.read()
 
-    # Fill in prospect + offer details
+    # Fill in prospect and offer details
     prompt = f"""
     Prospect:
     Name: {lead.get("name")}
@@ -55,7 +67,7 @@ def ai_based_scoring(lead: dict, offer: dict) -> dict:
     intent = parsed.get("intent", "Low")
     reasoning = parsed.get("reasoning", "No reasoning provided.")
 
-    # Map intent → capped AI score (max 50)
+    # Map intent to capped AI score (max 50)
     score_map = {"High": 50, "Medium": 30, "Low": 10}
     ai_points = score_map.get(intent, 10)
 

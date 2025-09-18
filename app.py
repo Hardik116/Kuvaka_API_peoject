@@ -5,20 +5,19 @@ from dotenv import load_dotenv
 from services.service import rule_based_scoring, ai_based_scoring
 from services.storage_handler import save_offer, load_offer, save_leads, load_leads, save_results, load_results
 
-
+# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
 
-# /offer
+# Endpoint to set the offer details
 @app.route("/offer", methods=["POST"])
 def set_offer():
     data = request.get_json()
     save_offer(data)
     return jsonify({"message": "Offer saved", "offer": data}), 201
 
-
-# /leads/upload
+# Endpoint to upload leads as a CSV file
 @app.route("/leads/upload", methods=["POST"])
 def upload_leads():
     if "file" not in request.files:
@@ -36,8 +35,7 @@ def upload_leads():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-# /score
+# Endpoint to score leads using rule-based and AI-based logic
 @app.route("/score", methods=["POST"])
 def score_leads():
     offer = load_offer()
@@ -65,14 +63,12 @@ def score_leads():
     save_results(results)
     return jsonify({"message": "Scoring complete", "results": results}), 200
 
-
-# /results
+# Endpoint to get scored results as JSON
 @app.route("/results", methods=["GET"])
 def get_results():
     return jsonify(load_results()), 200
 
-
-# /results/export
+# Endpoint to export scored results as a CSV file
 @app.route("/results/export", methods=["GET"])
 def export_results():
     results = load_results()
@@ -85,4 +81,5 @@ def export_results():
     return send_file(file_path, as_attachment=True)
 
 if __name__ == "__main__":
+    # Run the Flask app in debug mode
     app.run(debug=True)
