@@ -84,6 +84,3 @@ def export_results():
     df.to_csv(file_path, index=False)
     return send_file(file_path, as_attachment=True)
 
-if __name__ == "__main__":
-    # Run the Flask app in debug mode
-    app.run(debug=True)
