@@ -1,29 +1,88 @@
-from flask import Flask
+import os
+import pandas as pd
+from flask import Flask, request, jsonify, send_file
+from dotenv import load_dotenv
+from services.service import rule_based_scoring, ai_based_scoring
+from services.storage_handler import save_offer, load_offer, save_leads, load_leads, save_results, load_results
 
-# Initialize Flask app
+
+load_dotenv()
+
 app = Flask(__name__)
 
-# Define a simple route
-@app.route("/")
-def home():
-    return "Hello, Flask!"
+# /offer
+@app.route("/offer", methods=["POST"])
+def set_offer():
+    data = request.get_json()
+    save_offer(data)
+    return jsonify({"message": "Offer saved", "offer": data}), 201
 
 
-@app.route("/offer" , methods=['GET'])
-def offer():
-    return "This is offer API"
-
-
-@app.rute("/leads/uploads", methods=['POST'])
+# /leads/upload
+@app.route("/leads/upload", methods=["POST"])
 def upload_leads():
-    return "This is leads upload API"
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No file selected"}), 400
+
+    try:
+        df = pd.read_csv(file)
+        leads = df.to_dict(orient="records")
+        save_leads(leads)
+        return jsonify({"message": "Leads uploaded", "total": len(leads)}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
-@app.route("/score", methods=['POST'])
-def score():
-    # TODO: Implement scoring logic here
-    return "this is a score API"
+# /score
+@app.route("/score", methods=["POST"])
+def score_leads():
+    offer = load_offer()
+    leads = load_leads()
+    if not offer:
+        return jsonify({"error": "No offer set. Call /offer first"}), 400
+    if not leads:
+        return jsonify({"error": "No leads uploaded. Call /leads/upload first"}), 400
 
-# Run the app
+    results = []
+    for lead in leads:
+        rule_score = rule_based_scoring(lead, offer)
+        ai_result = ai_based_scoring(lead, offer)
+        final_score = rule_score + ai_result["ai_points"]
+
+        results.append({
+            "name": lead.get("name"),
+            "role": lead.get("role"),
+            "company": lead.get("company"),
+            "intent": ai_result["intent"],
+            "score": final_score,
+            "reasoning": ai_result["reasoning"]
+        })
+
+    save_results(results)
+    return jsonify({"message": "Scoring complete", "results": results}), 200
+
+
+# /results
+@app.route("/results", methods=["GET"])
+def get_results():
+    return jsonify(load_results()), 200
+
+
+# /results/export
+@app.route("/results/export", methods=["GET"])
+def export_results():
+    results = load_results()
+    if not results:
+        return jsonify({"error": "No results available"}), 400
+
+    df = pd.DataFrame(results)
+    file_path = "storage/scored_results.csv"
+    df.to_csv(file_path, index=False)
+    return send_file(file_path, as_attachment=True)
+
 if __name__ == "__main__":
     app.run(debug=True)
