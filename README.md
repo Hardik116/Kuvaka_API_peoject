@@ -93,4 +93,4 @@ Final score = rule-based score + AI score.
 - `services/service.py` — Scoring logic
 - `services/gemini_helper.py` — Gemini API integration
 - `services/storage_handler.py` — File storage utilities
-- `storage/` — Data files (leads, offer, results)
+- `storage/` — Data files (leads, offer, results) for local testing
