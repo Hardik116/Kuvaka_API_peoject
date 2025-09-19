@@ -2,3 +2,6 @@ flask
 pandas
 python-dotenv
 google-generativeai
+pymongo 
+dnspython
+

@@ -13,9 +13,10 @@ This project provides a Flask API for scoring sales leads using both rule-based 
    ```
 
 3. **Set up environment variables**  
-   - Add your Gemini API key to `.env`:
+   - Add your Gemini API key and MongoDB URI to `.env`:
      ```
      GEMINI_API_KEY="your-gemini-api-key"
+     MONGO_URI="your-mongodb-uri"
      ```
 
 4. **Run the server**  

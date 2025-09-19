@@ -17,8 +17,10 @@ def index():
 # Endpoint to set the offer details
 @app.route("/offer", methods=["POST"])
 def set_offer():
-    data = request.get_json()
+    data = request.json
     save_offer(data)
+    if "_id" in data:  # remove ObjectId before sending back
+        data["_id"] = str(data["_id"])
     return jsonify({"message": "Offer saved", "offer": data}), 201
 
 # Endpoint to upload leads as a CSV file
@@ -65,7 +67,8 @@ def score_leads():
         })
 
     save_results(results)
-    return jsonify({"message": "Scoring complete", "results": results}), 200
+    clean_results = load_results()
+    return jsonify({"message": "Scoring complete", "results": clean_results}), 200
 
 # Endpoint to get scored results as JSON
 @app.route("/results", methods=["GET"])
@@ -84,3 +87,5 @@ def export_results():
     df.to_csv(file_path, index=False)
     return send_file(file_path, as_attachment=True)
 
+# if __name__ == "__main__":
+#     app.run(debug=True)

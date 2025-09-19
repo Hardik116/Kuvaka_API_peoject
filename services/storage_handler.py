@@ -1,57 +1,35 @@
-import json
-import pandas as pd
+# services/storage_handler.py
+from pymongo import MongoClient
 import os
+from dotenv import load_dotenv
 
-# Directory for storing files
-STORAGE_DIR = "storage"
-os.makedirs(STORAGE_DIR, exist_ok=True)
+load_dotenv()
 
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+db = client["leadscoring"]
+
+# Offers
 def save_offer(offer):
-    """
-    Save offer details to offer.json.
-    """
-    with open(os.path.join(STORAGE_DIR, "offer.json"), "w") as f:
-        json.dump(offer, f)
+    db.offers.delete_many({})  # keep only one active offer
+    db.offers.insert_one(offer)
 
 def load_offer():
-    """
-    Load offer details from offer.json.
-    """
-    path = os.path.join(STORAGE_DIR, "offer.json")
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            return json.load(f)
-    return {}
+    return db.offers.find_one({}, {"_id": 0})
 
+# Leads
 def save_leads(leads):
-    """
-    Save leads to leads.csv.
-    """
-    df = pd.DataFrame(leads)
-    df.to_csv(os.path.join(STORAGE_DIR, "leads.csv"), index=False)
+    db.leads.delete_many({})
+    db.leads.insert_many(leads)
 
 def load_leads():
-    """
-    Load leads from leads.csv.
-    """
-    path = os.path.join(STORAGE_DIR, "leads.csv")
-    if os.path.exists(path):
-        return pd.read_csv(path).to_dict(orient="records")
-    return []
+    return list(db.leads.find({}, {"_id": 0}))
 
+# Results
 def save_results(results):
-    """
-    Save scoring results to results.json.
-    """
-    with open(os.path.join(STORAGE_DIR, "results.json"), "w") as f:
-        json.dump(results, f)
+    db.results.delete_many({})
+    db.results.insert_many(results)
 
 def load_results():
-    """
-    Load scoring results from results.json.
-    """
-    path = os.path.join(STORAGE_DIR, "results.json")
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            return json.load(f)
-    return []
+    return list(db.results.find({}, {"_id": 0}))
+
