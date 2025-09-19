@@ -41,7 +41,12 @@ def ai_based_scoring(lead: dict, offer: dict) -> dict:
     Returns intent, reasoning, and mapped AI points.
     """
     # Load prompt template from file
-    with open("services\prompt.txt", "r") as f:
+    
+    base_dir = os.path.dirname(__file__)
+    prompt_path = os.path.join(base_dir, "prompt.txt")
+
+    # Read prompt file safely
+    with open(prompt_path, "r") as f:
         base_prompt = f.read()
 
     # Fill in prospect and offer details
