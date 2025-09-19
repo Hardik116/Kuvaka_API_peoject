@@ -1,5 +1,5 @@
 # AI Lead Scoring API
-
+Final Deployment base url : https://kuvakaapipeoject-production.up.railway.app/ 
 This project provides a Flask API for scoring sales leads using both rule-based logic and Gemini AI. Results are stored and can be exported as CSV.
 
 ## Setup
