@@ -1,4 +1,5 @@
 from services.gemini_helper import call_gemini, clean_gemini_response
+import os
 
 
 def rule_based_scoring(lead, offer):
