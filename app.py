@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify, send_file
 from dotenv import load_dotenv
 from services.service import rule_based_scoring, ai_based_scoring
 from services.storage_handler import save_offer, load_offer, save_leads, load_leads, save_results, load_results
+from io import StringIO
 
 # Load environment variables from .env file
 load_dotenv()
@@ -76,6 +77,7 @@ def get_results():
     return jsonify(load_results()), 200
 
 # Endpoint to export scored results as a CSV file
+
 @app.route("/results/export", methods=["GET"])
 def export_results():
     results = load_results()
@@ -83,9 +85,17 @@ def export_results():
         return jsonify({"error": "No results available"}), 400
 
     df = pd.DataFrame(results)
-    file_path = "storage/scored_results.csv"
-    df.to_csv(file_path, index=False)
-    return send_file(file_path, as_attachment=True)
+    buffer = StringIO()
+    df.to_csv(buffer, index=False)
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name="scored_results.csv"
+    )
+
 
 # if __name__ == "__main__":
 #     app.run(debug=True)
