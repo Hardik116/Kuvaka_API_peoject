@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from services.service import rule_based_scoring, ai_based_scoring
 from services.storage_handler import save_offer, load_offer, save_leads, load_leads, save_results, load_results
 from io import StringIO
+from io import BytesIO
 
 # Load environment variables from .env file
 load_dotenv()
@@ -78,6 +79,7 @@ def get_results():
 
 # Endpoint to export scored results as a CSV file
 
+
 @app.route("/results/export", methods=["GET"])
 def export_results():
     results = load_results()
@@ -85,8 +87,8 @@ def export_results():
         return jsonify({"error": "No results available"}), 400
 
     df = pd.DataFrame(results)
-    buffer = StringIO()
-    df.to_csv(buffer, index=False)
+    buffer = BytesIO()
+    df.to_csv(buffer, index=False, encoding='utf-8')
     buffer.seek(0)
 
     return send_file(
@@ -95,6 +97,7 @@ def export_results():
         as_attachment=True,
         download_name="scored_results.csv"
     )
+
 
 
 # if __name__ == "__main__":
